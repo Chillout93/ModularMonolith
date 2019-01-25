@@ -12,7 +12,22 @@ namespace ModularMonolith
 			var warehouses = new List<Warehouse> { new Warehouse() { ID = 1, Code = "WarehouseA" }, new Warehouse() { ID = 2, Code = "WarehouseB" } };
 			var branches = new List<Branch> { new Branch() { ID = 1, Code = "BranchA" }, new Branch() { ID = 2, Code = "BranchB" } };
 			var products = new List<Product> { new Product() { ID = 1, Barcode = "CoolChair" }, new Product() { ID = 2, Barcode = "CoolJacket" } };
+			var productGroups = new List<ProductGroup>();
+			var branchGroups = new List<BranchGroup>();
 
+			foreach(var product in products) {
+				productGroups.Add(new ProductGroup() { Product = product, GroupCode = "MAIN" });
+
+				product.ProductGroups = productGroups;
+			}
+
+			foreach (var branch in branches) {
+				branchGroups.Add(new BranchGroup() { Branch = branch, GroupCode = "MAIN" });
+				branchGroups.Add(new BranchGroup() { Branch = branch, GroupCode = "HIGHWINTER" });
+
+				branch.BranchGroups = branchGroups;
+			}
+			
 			var warehouseStock = from w in warehouses
 								 join p in products on 1 equals 1
 								 select new ProductWarehouse() {
@@ -43,7 +58,7 @@ namespace ModularMonolith
 
 			// Simulate branch allocation
 			while (true) {
-				foreach(var branchStock in branchStocks) {
+				foreach(var branchStock in branchStocks.Where(x => x.Branch.BranchGroups.Any(y => y.GroupCode == "HIGHWINTER"))) {
 					if (branchStock.HardQuantity < branchStock.Required) {
 						var actualWarehouseStock = branchStock.Branch.Warehouse.WarehouseStock.FirstOrDefault(x => x.Product.ID == branchStock.Product.ID);
 						if (actualWarehouseStock.SoftQuantity == 0) {
@@ -75,6 +90,18 @@ namespace ModularMonolith
 	public class Product {
 		public int ID { get; set; }
 		public string Barcode { get; set; }
+
+		public IList<ProductGroup> ProductGroups { get; set; }
+	}
+
+	public class ProductGroup {
+		public string GroupCode { get; set; }
+		public Product Product { get; set; }
+	}
+
+	public class BranchGroup {
+		public string GroupCode { get; set; }
+		public Branch Branch { get; set; }
 	}
 
 	public class Branch {
@@ -83,7 +110,8 @@ namespace ModularMonolith
 
 		public Warehouse Warehouse { get; set; }
 		public IList<ProductBranch> BranchStock { get; set; }
-	}
+		public IList<BranchGroup> BranchGroups { get; set; }
+ 	}
 
 	public class ProductBranch {
 		public Product Product { get; set; }
@@ -91,6 +119,8 @@ namespace ModularMonolith
 		public int SoftQuantity { get; set; }
 		public int HardQuantity { get; set; }
 		public int Required { get; set; }
+
+		public IList<ProductGroup> ProductGroups { get; set; }
 	}
 
 	public class ProductWarehouse {
