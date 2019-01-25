@@ -10,7 +10,7 @@ namespace ModularMonolith
         static void Main(string[] args)
         {
 			var warehouses = new List<Warehouse> { new Warehouse() { ID = 1, Code = "WarehouseA" }, new Warehouse() { ID = 2, Code = "WarehouseB" } };
-			var branches = new List<Branch> { new Branch() { ID = 1, Code = "BranchA", Warehouse = new Warehouse() { ID = 1, Code = "WarehouseA" } }, new Branch() { ID = 2, Code = "BranchB", Warehouse = new Warehouse() { ID = 1, Code = "WarehouseA" } } };
+			var branches = new List<Branch> { new Branch() { ID = 1, Code = "BranchA" }, new Branch() { ID = 2, Code = "BranchB" } };
 			var products = new List<Product> { new Product() { ID = 1, Barcode = "CoolChair" }, new Product() { ID = 2, Barcode = "CoolJacket" } };
 
 			var warehouseStock = from w in warehouses
@@ -36,6 +36,11 @@ namespace ModularMonolith
 								  Required = 3
 							  };
 
+			foreach (var branch in branches) {
+				branch.BranchStock = branchStocks.Where(x => x.Branch.ID == branch.ID).ToList();
+				branch.Warehouse = warehouses.FirstOrDefault(x => x.ID == 1);
+			}
+
 			// Simulate branch allocation
 			while (true) {
 				foreach(var branchStock in branchStocks) {
@@ -48,7 +53,11 @@ namespace ModularMonolith
 
 						actualWarehouseStock.SoftQuantity -= 1;
 						branchStock.SoftQuantity += 1;
+
+						Console.WriteLine($"{actualWarehouseStock.Warehouse.Code} now {actualWarehouseStock.SoftQuantity}, {branchStock.Branch.Code} now {branchStock.SoftQuantity}");
 					}
+
+					
 				}
 
 				Thread.Sleep(10000);
