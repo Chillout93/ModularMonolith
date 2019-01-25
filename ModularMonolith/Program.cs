@@ -62,6 +62,11 @@ namespace ModularMonolith
 				foreach(var branchStock in branchStocks.Where(x => x.Branch.BranchGroups.Any(y => y.GroupCode == "HIGHWINTER"))) {
 					// Qty Sold / Stock on Hand / Lifecycle
 					branchStock.RateOfSale = branchStock.Branch.Orders.SelectMany(x => x.Product).Where(x => x.ID == branchStock.Product.ID).Count() / branchStock.SoftQuantity / 16;
+					
+					if (branchStock.Product.Promotions.Any(x => DateTime.UtcNow > x.StartDate && DateTime.UtcNow < x.EndDate)) {
+						// Modify the rate of sale based on a promotion
+						branchStock.RateOfSale *= 2;
+					}
 
 					if (branchStock.HardQuantity < branchStock.Required) {
 						var actualWarehouseStock = branchStock.Branch.Warehouse.WarehouseStock.FirstOrDefault(x => x.Product.ID == branchStock.Product.ID);
@@ -96,6 +101,13 @@ namespace ModularMonolith
 		public string Barcode { get; set; }
 
 		public IList<ProductGroup> ProductGroups { get; set; }
+		public IList<Promotion> Promotions { get; set; }
+	}
+
+	public class Promotion {
+		public Product Product { get; set; }
+		public DateTime StartDate { get; set; }
+		public DateTime EndDate { get; set; }
 	}
 
 	public class ProductGroup {
