@@ -56,9 +56,13 @@ namespace ModularMonolith
 				branch.Warehouse = warehouses.FirstOrDefault(x => x.ID == 1);
 			}
 
+
 			// Simulate branch allocation
 			while (true) {
 				foreach(var branchStock in branchStocks.Where(x => x.Branch.BranchGroups.Any(y => y.GroupCode == "HIGHWINTER"))) {
+					// Qty Sold / Stock on Hand / Lifecycle
+					branchStock.RateOfSale = branchStock.Branch.Orders.SelectMany(x => x.Product).Where(x => x.ID == branchStock.Product.ID).Count() / branchStock.SoftQuantity / 16;
+
 					if (branchStock.HardQuantity < branchStock.Required) {
 						var actualWarehouseStock = branchStock.Branch.Warehouse.WarehouseStock.FirstOrDefault(x => x.Product.ID == branchStock.Product.ID);
 						if (actualWarehouseStock.SoftQuantity == 0) {
@@ -111,6 +115,7 @@ namespace ModularMonolith
 		public Warehouse Warehouse { get; set; }
 		public IList<ProductBranch> BranchStock { get; set; }
 		public IList<BranchGroup> BranchGroups { get; set; }
+		public IList<Order> Orders { get; set; }
  	}
 
 	public class ProductBranch {
@@ -119,8 +124,14 @@ namespace ModularMonolith
 		public int SoftQuantity { get; set; }
 		public int HardQuantity { get; set; }
 		public int Required { get; set; }
+		public decimal RateOfSale { get; set; }
 
 		public IList<ProductGroup> ProductGroups { get; set; }
+	}
+
+	public class Order {
+		public Branch Branch { get;set; }
+		public IList<Product> Product { get; set; }
 	}
 
 	public class ProductWarehouse {
